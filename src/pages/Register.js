@@ -1,90 +1,78 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { saveAuth, getUser } from '../utils/auth';
+import React, { useState } from "react";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+export default function Register() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
 
-function Register() {
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const navigate = useNavigate();
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (getUser()) {
-      navigate('/dashboard');
-    }
-  }, [navigate]);
-
-  const handleRegister = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (password !== confirmPassword) {
-      alert("❌ Passwords don't match!");
-      return;
-    }
-
     try {
-      const res = await axios.post(`${API_URL}/api/auth/register`, {
-        name,
-        email,
-        password,
+      const response = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
       });
 
-      saveAuth(res.data.token, res.data.user);
-      alert('✅ Registration successful!');
-      navigate('/dashboard');
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Registration failed';
-      alert(`❌ ${errorMsg}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage("✅ Registration successful! Please login.");
+        setName("");
+        setEmail("");
+        setPassword("");
+      } else {
+        setMessage(`❌ Registration failed: ${data.message || "Try again"}`);
+      }
+    } catch (error) {
+      setMessage("⚠️ Server not reachable. Check if backend is running.");
     }
   };
 
   return (
-    <div className="p-6 max-w-md mx-auto">
-      <h2 className="text-xl font-bold mb-4">Register</h2>
-      <form onSubmit={handleRegister}>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          className="w-full p-2 mb-3 border rounded"
-          required
-        />
+    <div style={{ maxWidth: "400px", margin: "50px auto" }}>
+      <h2>Register</h2>
+      <form onSubmit={handleSubmit}>
         <input
           type="text"
+          placeholder="Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Name"
-          className="w-full p-2 mb-3 border rounded"
           required
+          style={{ display: "block", margin: "10px 0", padding: "10px" }}
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          style={{ display: "block", margin: "10px 0", padding: "10px" }}
         />
         <input
           type="password"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          className="w-full p-2 mb-3 border rounded"
           required
+          style={{ display: "block", margin: "10px 0", padding: "10px" }}
         />
-        <input
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm Password"
-          className="w-full p-2 mb-4 border rounded"
-          required
-        />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded w-full">
+        <button
+          type="submit"
+          style={{
+            padding: "10px",
+            marginTop: "10px",
+            width: "100%",
+            background: "blue",
+            color: "white",
+          }}
+        >
           Register
         </button>
       </form>
+      {message && <p style={{ marginTop: "15px" }}>{message}</p>}
     </div>
   );
 }
-
-export default Register;

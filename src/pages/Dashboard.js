@@ -1,41 +1,52 @@
-import React from 'react';
-import { getUser, logout } from '../utils/auth';
+// src/pages/Dashboard.jsx
+import React, { useContext } from 'react';
+import { UserContext } from '../context/UserContext';
+import { logout } from '../utils/auth';
 import { useNavigate } from 'react-router-dom';
+import FlightUpdates from './FlightUpdates';
 
 function Dashboard() {
-  const user = getUser();
+  const { user, setUser } = useContext(UserContext);
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    alert('🚪 Logged out!');
+    setUser(null);
     navigate('/login');
   };
 
-  if (!user) {
-    return (
-      <div className="p-6 max-w-md mx-auto text-center">
-        <h2 className="text-xl font-bold mb-2">Not logged in</h2>
-        <button
-          onClick={() => navigate('/login')}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          Go to Login
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6 max-w-md mx-auto">
-      <h2 className="text-xl font-bold mb-4">👋 Welcome, {user.name}</h2>
-      <p className="mb-4 text-gray-700">Email: {user.email}</p>
-      <button
-        onClick={handleLogout}
-        className="bg-red-600 text-white px-4 py-2 rounded w-full"
-      >
-        Logout
-      </button>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-4xl mx-auto bg-white shadow rounded-xl p-6">
+        <h1 className="text-2xl font-bold mb-4">Welcome, {user?.username || 'Guest'} 👋</h1>
+        <p className="text-gray-600 mb-6">This is your dashboard.</p>
+
+        <div className="space-x-4 mb-6">
+          <button
+            onClick={() => navigate('/my-bookings')}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600"
+          >
+            My Bookings
+          </button>
+
+          <button
+            onClick={() => navigate('/search')}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg shadow hover:bg-green-600"
+          >
+            Search Flights
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600"
+          >
+            Logout
+          </button>
+        </div>
+
+        {/* Real-time Flight Updates Section */}
+        <FlightUpdates />
+      </div>
     </div>
   );
 }

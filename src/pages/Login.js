@@ -1,65 +1,69 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { saveAuth } from '../utils/auth';
-import { getUser } from '../utils/auth';
+import React, { useState } from "react";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
 
-function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const navigate = useNavigate();
-
-  // Redirect logged-in users to dashboard
-  useEffect(() => {
-    if (getUser()) {
-      navigate('/dashboard');
-    }
-  }, [navigate]);
-
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      const res = await axios.post(`${API_URL}/api/auth/login`, {
-        email,
-        password,
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
 
-      saveAuth(res.data.token, res.data.user);
-      alert('✅ Login successful!');
-      navigate('/dashboard'); // Redirect to dashboard after login
-    } catch (err) {
-      alert('❌ Login failed: ' + (err.response?.data?.error || 'Unknown error'));
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage("✅ Login successful!");
+        localStorage.setItem("token", data.token); // save JWT for future requests
+        setEmail("");
+        setPassword("");
+      } else {
+        setMessage(`❌ Login failed: ${data.message || "Invalid credentials"}`);
+      }
+    } catch (error) {
+      setMessage("⚠️ Server not reachable. Check if backend is running.");
     }
   };
 
   return (
-    <div className="p-6 max-w-md mx-auto">
-      <h2 className="text-xl font-bold mb-4">Login</h2>
-      <form onSubmit={handleLogin}>
+    <div style={{ maxWidth: "400px", margin: "50px auto" }}>
+      <h2>Login</h2>
+      <form onSubmit={handleSubmit}>
         <input
           type="email"
+          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          className="w-full p-2 mb-3 border rounded"
           required
+          style={{ display: "block", margin: "10px 0", padding: "10px" }}
         />
         <input
           type="password"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          className="w-full p-2 mb-4 border rounded"
           required
+          style={{ display: "block", margin: "10px 0", padding: "10px" }}
         />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded w-full">
+        <button
+          type="submit"
+          style={{
+            padding: "10px",
+            marginTop: "10px",
+            width: "100%",
+            background: "blue",
+            color: "white",
+          }}
+        >
           Login
         </button>
       </form>
+      {message && <p style={{ marginTop: "15px" }}>{message}</p>}
     </div>
   );
 }
-
-export default Login;
