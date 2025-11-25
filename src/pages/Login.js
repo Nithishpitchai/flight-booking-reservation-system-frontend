@@ -5,11 +5,14 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
+  // Load backend from .env
+  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL?.replace(/\/$/, "");
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -19,20 +22,26 @@ export default function Login() {
 
       if (response.ok) {
         setMessage("✅ Login successful!");
-        localStorage.setItem("token", data.token); // save JWT for future requests
+        localStorage.setItem("token", data.token);
+
         setEmail("");
         setPassword("");
+
+        // OPTIONAL: redirect after login
+        window.location.href = "/dashboard";
       } else {
         setMessage(`❌ Login failed: ${data.message || "Invalid credentials"}`);
       }
     } catch (error) {
-      setMessage("⚠️ Server not reachable. Check if backend is running.");
+      console.error(error);
+      setMessage("⚠️ Cannot connect to backend. Check API deployment.");
     }
   };
 
   return (
     <div style={{ maxWidth: "400px", margin: "50px auto" }}>
       <h2>Login</h2>
+
       <form onSubmit={handleSubmit}>
         <input
           type="email"
@@ -42,6 +51,7 @@ export default function Login() {
           required
           style={{ display: "block", margin: "10px 0", padding: "10px" }}
         />
+
         <input
           type="password"
           placeholder="Password"
@@ -50,6 +60,7 @@ export default function Login() {
           required
           style={{ display: "block", margin: "10px 0", padding: "10px" }}
         />
+
         <button
           type="submit"
           style={{
@@ -63,6 +74,7 @@ export default function Login() {
           Login
         </button>
       </form>
+
       {message && <p style={{ marginTop: "15px" }}>{message}</p>}
     </div>
   );
